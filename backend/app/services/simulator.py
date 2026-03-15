@@ -1,6 +1,7 @@
-"""役割: 分割済み services の互換エントリポイント。"""
+"""役割: シミュレーション関連サービスの公開口。"""
 
 from .simulation_flow import (
+    activate_existing_node,
     add_custom_branch,
     continue_simulation,
     generate_branches_for_node,
@@ -15,6 +16,7 @@ from .tree_view import build_tree_view_model
 
 
 __all__ = [
+    "activate_existing_node",
     "add_custom_branch",
     "build_tree_view_model",
     "continue_simulation",

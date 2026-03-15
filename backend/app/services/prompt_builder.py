@@ -25,6 +25,12 @@ Rules:
 - Do not include year or age in the output
 """.strip()
 
+BRANCH_PROMPT_FILES = {
+    "short": "bunki_prompt_short.txt",
+    "normal": "bunki_prompt.txt",
+    "long": "bunki_prompt_long.txt",
+}
+
 
 def _load_prompt_file(filename: str) -> str:
     path = REPO_ROOT / filename
@@ -42,15 +48,17 @@ def _fill_prompt(template: str, values: dict[str, str]) -> str:
 
 
 def build_branch_prompt(profile: dict[str, str], event: str, history: list[str]) -> tuple[str, str]:
-    system = "人生シミュレーションの分岐候補をJSONだけで返してください。"
+    system = "人生分岐シミュレーションの分岐候補を JSON だけで返してください。"
     story_summary = " -> ".join(history) if history else "まだ履歴はありません。"
+    prompt_filename = BRANCH_PROMPT_FILES.get(profile.get("branch_timing", "normal"), "bunki_prompt.txt")
     message = _fill_prompt(
-        _load_prompt_file("bunki_prompt.txt"),
+        _load_prompt_file(prompt_filename),
         {
             "age": str(profile["current_age"]),
             "values": profile.get("values", ""),
             "interests": profile.get("interests", profile.get("values", "")),
             "personality": profile.get("personality", ""),
+            "mbti": profile.get("mbti", ""),
             "current_event": event,
             "story_summary": story_summary,
         },
@@ -59,7 +67,7 @@ def build_branch_prompt(profile: dict[str, str], event: str, history: list[str])
 
 
 def build_result_prompt(profile: dict[str, str], event: str, history: list[str]) -> tuple[str, str]:
-    system = "人生シミュレーションの結果をJSONだけで返してください。"
+    system = "人生分岐シミュレーションの結果を JSON だけで返してください。"
     story_summary = " -> ".join(history[-4:]) if history else "まだストーリー履歴はありません。"
     message = _fill_prompt(
         _load_prompt_file("out_prompt.txt"),
@@ -68,6 +76,7 @@ def build_result_prompt(profile: dict[str, str], event: str, history: list[str])
             "values": profile.get("values", ""),
             "interests": profile.get("interests", profile.get("values", "")),
             "personality": profile.get("personality", ""),
+            "mbti": profile.get("mbti", ""),
             "story_summary": story_summary,
             "selected_branch": event,
         },
@@ -76,7 +85,7 @@ def build_result_prompt(profile: dict[str, str], event: str, history: list[str])
 
 
 def build_story_prompt(profile: dict[str, str], nodes: list[dict[str, str]]) -> tuple[str, str]:
-    system = "人生シミュレーションの物語要約をJSONだけで返してください。"
+    system = "人生分岐シミュレーションの要約を JSON だけで返してください。"
     route_history = " -> ".join(node["event"] for node in nodes)
     result_history = "\n".join(
         f"- {node['event']}: {node.get('result', '結果なし')} / 幸福度: {LVL_LABEL.get(node.get('happiness', 'medium'), '中')}"
@@ -89,6 +98,7 @@ def build_story_prompt(profile: dict[str, str], nodes: list[dict[str, str]]) -> 
             "values": profile.get("values", ""),
             "interests": profile.get("interests", profile.get("values", "")),
             "personality": profile.get("personality", ""),
+            "mbti": profile.get("mbti", ""),
             "route_history": route_history,
             "result_history": result_history,
         },

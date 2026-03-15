@@ -9,7 +9,22 @@
 
 <div id="loading-indicator" class="loading-overlay htmx-indicator">
   <div class="spinner"></div>
-  <div class="loading-text">分岐を生成中...</div>
+  <div class="loading-text" data-default-text="分岐を生成中...">分岐を生成中...</div>
 </div>
-{% endblock %}
 
+<script>
+  document.body.addEventListener("htmx:beforeRequest", function (event) {
+    const loadingText = document.querySelector("#loading-indicator .loading-text");
+    if (!loadingText) return;
+    const trigger = event.detail.elt;
+    const customText = trigger && trigger.getAttribute("data-loading-text");
+    loadingText.textContent = customText || loadingText.dataset.defaultText || "分岐を生成中...";
+  });
+
+  document.body.addEventListener("htmx:afterRequest", function () {
+    const loadingText = document.querySelector("#loading-indicator .loading-text");
+    if (!loadingText) return;
+    loadingText.textContent = loadingText.dataset.defaultText || "分岐を生成中...";
+  });
+</script>
+{% endblock %}

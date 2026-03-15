@@ -5,7 +5,13 @@ from __future__ import annotations
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse
 
-from ..services.simulator import generate_branches_for_node, get_branch_by_id, select_branch, start_simulation
+from ..services.simulator import (
+    activate_existing_node,
+    generate_branches_for_node,
+    get_branch_by_id,
+    select_branch,
+    start_simulation,
+)
 from .shared import current_state, render_app, save_state
 
 
@@ -37,6 +43,14 @@ async def tree_start(
 async def tree_generate(request: Request, node_id: str = Form(...)) -> HTMLResponse:
     session_id, state = current_state(request)
     state = await generate_branches_for_node(state, node_id, panel="tree")
+    save_state(session_id, state)
+    return render_app(request, session_id, state)
+
+
+@router.post("/tree/activate", response_class=HTMLResponse)
+async def tree_activate(request: Request, node_id: str = Form(...)) -> HTMLResponse:
+    session_id, state = current_state(request)
+    state = await activate_existing_node(state, node_id, panel="tree")
     save_state(session_id, state)
     return render_app(request, session_id, state)
 

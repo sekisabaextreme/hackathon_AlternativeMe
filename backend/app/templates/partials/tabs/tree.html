@@ -2,7 +2,7 @@
   <div class="section-head">
     <div>
       <h2>ツリー表示</h2>
-      <p>最初の分岐点の作成から次の二択生成、結果確認までをツリー上で進めます。</p>
+      <p>最初の分岐点の作成から、分岐の選択、次の候補生成までをツリー上で進めます。</p>
     </div>
   </div>
   {% if profile %}
@@ -19,7 +19,7 @@
       <textarea
         name="event"
         rows="4"
-        placeholder="例: 高校卒業後に福祉分野へ進むか迷う"
+        placeholder="例: 高校卒業後にどの進路へ進むか迷う"
         required
       ></textarea>
     </label>
@@ -48,25 +48,26 @@
       {% for edge in tree_view.edges %}
       <path
         d="M {{ edge.x1 }} {{ edge.y1 }} L {{ edge.x1 }} {{ edge.mid_y }} L {{ edge.x2 }} {{ edge.mid_y }} L {{ edge.x2 }} {{ edge.y2 }}"
-        class="tree-edge {{ 'is-selected' if edge.selected else '' }}"
+        class="tree-edge {{ 'is-selected' if edge.visited else '' }}"
       />
       {% endfor %}
 
       {% for node in tree_view.nodes %}
       <g
         transform="translate({{ node.x }}, {{ node.y }})"
-        hx-post="{{ '/tree/select-branch' if node.is_branch_candidate else '/tree/generate' }}"
+        hx-post="{{ '/tree/select-branch' if node.is_branch_candidate else '/tree/generate' if node.is_current else '/tree/activate' }}"
         hx-target="#app-shell"
         hx-swap="innerHTML"
         hx-vals='{{ {"branch_id": node.id}|tojson if node.is_branch_candidate else {"node_id": node.id}|tojson }}'
         hx-indicator="#loading-indicator"
+        data-loading-text="{{ '結果を生成中...' if node.is_branch_candidate or not node.is_current else '分岐を生成中...' }}"
         class="tree-node-group"
       >
         <rect
           width="{{ node.width }}"
           height="{{ node.height }}"
           rx="16"
-          class="tree-node-box {{ 'is-selected' if node.selected else '' }} {{ 'is-branch-candidate' if node.is_branch_candidate else '' }}"
+          class="tree-node-box {{ 'is-selected' if node.visited else '' }} {{ 'is-branch-candidate' if node.is_branch_candidate else '' }}"
         />
         <text x="16" y="24" class="tree-node-status">{{ node.status }}</text>
         <foreignObject x="16" y="34" width="{{ node.width - 32 }}" height="{{ node.height - 44 }}">
@@ -88,8 +89,10 @@
             </details>
             {% elif node.is_branch_candidate %}
             <div class="tree-node-meta">クリックするとこの候補を確定します。</div>
-            {% else %}
+            {% elif node.is_current %}
             <div class="tree-node-meta">クリックするとこの地点から次の二択を生成します。</div>
+            {% else %}
+            <div class="tree-node-meta">クリックするとこの分岐へ移動し、結果を表示します。</div>
             {% endif %}
           </div>
         </foreignObject>

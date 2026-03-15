@@ -33,10 +33,21 @@ def build_tree_view_model(nodes: list[dict[str, Any]], current_node_id: str | No
         title_lines = max(1, (title_len + chars_per_line - 1) // chars_per_line)
         meta_lines = 3 + (1 if node.get("happiness") else 0)
         height = base_height + max(0, title_lines - 1) * 24 + meta_lines * 10
+
+        helper_text = ""
+        if node.get("is_branch_candidate"):
+            helper_text = "クリックするとこの候補を確定します。"
+        elif not node.get("result"):
+            helper_text = "クリックするとこの地点から次の二択を生成します。"
+        if helper_text:
+            helper_lines = max(1, (len(helper_text) + chars_per_line - 1) // chars_per_line)
+            height += helper_lines * 18
+
         if node.get("result") and node.get("id") == current_node_id:
             result_len = len(str(node.get("result", "")))
             result_lines = max(2, (result_len + chars_per_line - 1) // chars_per_line)
             height += 34 + result_lines * 18
+
         dimensions[node["id"]] = {"width": width, "height": height}
         return dimensions[node["id"]]
 
@@ -83,6 +94,7 @@ def build_tree_view_model(nodes: list[dict[str, Any]], current_node_id: str | No
                 "title": node.get("event", ""),
                 "status": "候補" if node.get("is_branch_candidate") else "選択済み" if node.get("selected") else "未選択",
                 "selected": node.get("selected", False),
+                "visited": node.get("visited", False),
                 "is_branch_candidate": node.get("is_branch_candidate", False),
                 "happiness": node.get("happiness", ""),
                 "result": node.get("result", ""),
@@ -102,6 +114,7 @@ def build_tree_view_model(nodes: list[dict[str, Any]], current_node_id: str | No
                 {
                     "id": f"{parent_id}-{node['id']}",
                     "selected": node.get("selected", False),
+                    "visited": node.get("visited", False),
                     "x1": parent["x"] + parent_size["width"] // 2,
                     "y1": parent["y"],
                     "x2": pos["x"] + size["width"] // 2,

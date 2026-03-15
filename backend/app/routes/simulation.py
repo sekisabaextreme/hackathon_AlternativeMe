@@ -44,10 +44,12 @@ async def setup(
     birth_year: int = Form(...),
     interests: list[str] = Form([]),
     personality: list[str] = Form([]),
+    mbti: str = Form(""),
+    branch_timing: str = Form("normal"),
     provider: str = Form("openai"),
 ) -> HTMLResponse:
     session_id, state = current_state(request)
-    state.update(create_profile(name, birth_year, interests, personality))
+    state.update(create_profile(name, birth_year, interests, personality, mbti, branch_timing))
     state["provider"] = provider if provider in {"openai", "gemini"} else "openai"
     if state.get("profile"):
         state["profile"]["provider"] = state["provider"]

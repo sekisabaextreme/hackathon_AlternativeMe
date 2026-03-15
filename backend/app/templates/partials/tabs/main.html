@@ -26,7 +26,27 @@
       <input type="number" name="birth_year" placeholder="2001" required>
     </label>
     <label>
-      <span>興味</span>
+      <span>MBTI</span>
+      <input type="text" name="mbti" placeholder="INTJ">
+    </label>
+    <label>
+      <span>分岐イベントの時間間隔</span>
+      <div class="tag-grid">
+        {% for option in branch_timing_options %}
+        <label class="tag-option">
+          <input
+            type="radio"
+            name="branch_timing"
+            value="{{ option.value }}"
+            {{ 'checked' if state.branch_timing == option.value else '' }}
+          >
+          <span>{{ option.label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </label>
+    <label>
+      <span>興味関心</span>
       <span class="hint">複数選択できます。</span>
       <div class="tag-grid">
         {% for option in interest_options %}
@@ -49,7 +69,7 @@
         {% endfor %}
       </div>
     </label>
-    <button class="button" type="submit">プロフィールを登録</button>
+    <button class="button" type="submit">プロフィールを作成</button>
   </form>
   {% elif stage == "event" %}
   <div class="screen-body">
@@ -65,13 +85,13 @@
         <textarea
           name="event"
           rows="4"
-          placeholder="例: 大学で情報系を学び、地元で就職する"
+          placeholder="例: 大学進学と就職で迷っている"
           required
         ></textarea>
       </label>
       <div class="stack event-timing-form">
         <label class="field-left">
-          <span>その時の西暦</span>
+          <span>その時の年</span>
           <input type="number" name="event_year" placeholder="2024" required>
         </label>
         <label class="field-left">
@@ -93,7 +113,7 @@
       </div>
       <div class="branch-list branch-list-narrow">
         {% for branch in branches %}
-        <form class="branch" hx-post="/branch/select" hx-target="#app-shell" hx-swap="innerHTML" hx-indicator="#loading-indicator">
+        <form class="branch" hx-post="/branch/select" hx-target="#app-shell" hx-swap="innerHTML" hx-indicator="#loading-indicator" data-loading-text="結果を生成中...">
           <input type="hidden" name="branch_id" value="{{ branch.id }}">
           <p class="branch-event">{{ branch.event }}</p>
           <div class="meta-row branch-meta-row">
@@ -104,13 +124,13 @@
             <span>
               安定性:
               <span class="level-text level-{{ branch.stability }}">
-                {{ "大" if branch.stability == "high" else "中" if branch.stability == "medium" else "小" }}
+                {{ "高" if branch.stability == "high" else "中" if branch.stability == "medium" else "低" }}
               </span>
             </span>
             <span>
               挑戦度:
               <span class="level-text level-{{ branch.challenge }}">
-                {{ "大" if branch.challenge == "high" else "中" if branch.challenge == "medium" else "小" }}
+                {{ "高" if branch.challenge == "high" else "中" if branch.challenge == "medium" else "低" }}
               </span>
             </span>
           </div>
@@ -121,7 +141,7 @@
       <form class="stack inline-form" hx-post="/branch/custom" hx-target="#app-shell" hx-swap="innerHTML" hx-indicator="#loading-indicator">
         <label>
           <span>分岐を自由入力で追加</span>
-          <input type="text" name="event" placeholder="例: 1年後に起業へ進む" required>
+          <input type="text" name="event" placeholder="例: 1年後に別分野へ進む" required>
         </label>
         <button class="button button-secondary" type="submit">追加</button>
       </form>
@@ -153,7 +173,7 @@
         </div>
       </div>
       <div class="result-box">
-        <h3>選んだ出来事</h3>
+        <h3>選択した出来事</h3>
         <p>{{ current_node.event }}</p>
         <div class="meta-row branch-meta-row">
           <span>{{ current_node.year }}年</span>
@@ -166,8 +186,8 @@
       </div>
       <div class="result-box">
         <h3>幸福度</h3>
-        <p class="level-text level-{{ 'high' if current_node.happiness in ['high', '高', '大'] else 'medium' if current_node.happiness in ['medium', '中'] else 'low' }}">
-          {{ "大" if current_node.happiness in ["high", "高", "大"] else "中" if current_node.happiness in ["medium", "中"] else "小" }}
+        <p class="level-text level-{{ 'high' if current_node.happiness in ['high', '高'] else 'medium' if current_node.happiness in ['medium', '中'] else 'low' }}">
+          {{ "高" if current_node.happiness in ["high", "高"] else "中" if current_node.happiness in ["medium", "中"] else "低" }}
         </p>
       </div>
       <div class="actions">
@@ -178,7 +198,7 @@
           hx-target="#app-shell"
           hx-indicator="#loading-indicator"
         >
-          次の分岐へ進む
+          次の分岐を生成
         </button>
       </div>
     </section>
