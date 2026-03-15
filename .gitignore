@@ -1,5 +1,7 @@
 __pycache__/
 *.py[cod]
+backend/app/main/routes/__pycache__/
+backend/app/services/__pycache__/
 
 .env.local
 
