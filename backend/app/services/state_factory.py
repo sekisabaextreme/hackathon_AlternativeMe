@@ -1,4 +1,4 @@
-"""役割: シミュレーション初期状態とプロフィール生成を担当する。"""
+"""役割: シミュレーション初期状態とプロフィール生成を提供する。"""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ def initial_state() -> dict[str, Any]:
         "panel": "main",
         "error": "",
         "provider": "openai",
+        "branch_timing": "normal",
         "profile": None,
         "nodes": [],
         "branches": [],
@@ -22,7 +23,14 @@ def initial_state() -> dict[str, Any]:
     }
 
 
-def create_profile(name: str, birth_year: int, interests: list[str], personality: list[str]) -> dict[str, Any]:
+def create_profile(
+    name: str,
+    birth_year: int,
+    interests: list[str],
+    personality: list[str],
+    mbti: str,
+    branch_timing: str,
+) -> dict[str, Any]:
     current_year = datetime.now().year
     age = current_year - birth_year
     if not name.strip():
@@ -30,14 +38,17 @@ def create_profile(name: str, birth_year: int, interests: list[str], personality
     if age <= 0 or age >= 100:
         raise ValueError("生年の入力値が不正です。")
 
-    joined_interests = "、".join(item.strip() for item in interests if item.strip())
-    joined_personality = "、".join(item.strip() for item in personality if item.strip())
+    joined_interests = " / ".join(item.strip() for item in interests if item.strip())
+    joined_personality = " / ".join(item.strip() for item in personality if item.strip())
+    cleaned_mbti = mbti.strip().upper()
+    selected_timing = branch_timing if branch_timing in {"short", "normal", "long"} else "normal"
 
     return {
         "stage": "event",
         "panel": "tree",
         "error": "",
         "provider": "openai",
+        "branch_timing": selected_timing,
         "profile": {
             "name": name.strip(),
             "birth_year": birth_year,
@@ -45,6 +56,8 @@ def create_profile(name: str, birth_year: int, interests: list[str], personality
             "values": joined_interests,
             "interests": joined_interests,
             "personality": joined_personality,
+            "mbti": cleaned_mbti,
+            "branch_timing": selected_timing,
         },
         "nodes": [],
         "branches": [],

@@ -21,6 +21,12 @@ PROVIDER_OPTIONS = [
     {"value": "gemini", "label": "Gemini"},
 ]
 
+BRANCH_TIMING_OPTIONS = [
+    {"value": "short", "label": "短め"},
+    {"value": "normal", "label": "普通"},
+    {"value": "long", "label": "長め"},
+]
+
 INTEREST_OPTIONS = [
     "お金",
     "ものづくり",
@@ -110,6 +116,7 @@ def build_context(request: Request, state: dict[str, Any]) -> dict[str, Any]:
         "tree_view": build_tree_view_model(tree_nodes, current_node_id=state.get("current_node_id")),
         "story": state.get("story", ""),
         "provider_options": PROVIDER_OPTIONS,
+        "branch_timing_options": BRANCH_TIMING_OPTIONS,
         "interest_options": INTEREST_OPTIONS,
         "personality_options": PERSONALITY_OPTIONS,
     }

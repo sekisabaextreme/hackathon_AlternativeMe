@@ -25,6 +25,39 @@ def _new_id() -> str:
     return uuid.uuid4().hex[:8]
 
 
+def _node_lookup(nodes: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    return {node["id"]: node for node in nodes}
+
+
+def _path_to_node(nodes: list[dict[str, Any]], node_id: str | None) -> list[dict[str, Any]]:
+    if not node_id:
+        return []
+    by_id = _node_lookup(nodes)
+    ordered: list[dict[str, Any]] = []
+    current = by_id.get(node_id)
+    while current:
+        ordered.append(current)
+        parent_id = current.get("parent_id")
+        current = by_id.get(parent_id) if parent_id else None
+    ordered.reverse()
+    return ordered
+
+
+def _mark_selected_path(nodes: list[dict[str, Any]], node_id: str | None) -> list[dict[str, Any]]:
+    path = _path_to_node(nodes, node_id)
+    active_ids = {node["id"] for node in path}
+    for node in nodes:
+        node["selected"] = node["id"] in active_ids
+    return path
+
+
+def _mark_visited_path(nodes: list[dict[str, Any]], node_id: str | None) -> list[dict[str, Any]]:
+    path = _path_to_node(nodes, node_id)
+    for node in path:
+        node["visited"] = True
+    return path
+
+
 def _build_node_from_branch(
     branch: BranchCandidate,
     *,
@@ -44,6 +77,7 @@ def _build_node_from_branch(
         "age": current_age + branch.duration_years,
         "parent_id": parent_id,
         "selected": selected,
+        "visited": selected,
     }
 
 
@@ -80,6 +114,20 @@ async def _generate_branches(
     ]
 
 
+async def _resolve_node_result(
+    state: dict[str, Any],
+    node: dict[str, Any],
+    history: list[str],
+) -> dict[str, Any]:
+    runtime_profile = {**state["profile"], "current_age": node["age"]}
+    system, message = build_result_prompt(runtime_profile, node["event"], history)
+    text = await asyncio.to_thread(call_llm, state.get("provider", "openai"), system, message, True)
+    parsed = parse_json_text(text)
+    node["result"] = parsed.get("result_summary", parsed.get("result", "結果を生成できませんでした。"))
+    node["happiness"] = parsed.get("happiness", "medium")
+    return node
+
+
 async def start_simulation(
     state: dict[str, Any],
     event: str,
@@ -103,6 +151,7 @@ async def start_simulation(
             "year": event_year,
             "age": event_age,
             "selected": True,
+            "visited": True,
             "parent_id": None,
         }
         new_state["nodes"] = [root]
@@ -137,22 +186,22 @@ def get_branch_by_id(state: dict[str, Any], branch_id: str) -> dict[str, Any]:
 async def select_branch(state: dict[str, Any], branch: dict[str, Any], *, panel: str = "main") -> dict[str, Any]:
     new_state = copy.deepcopy(state)
     try:
-        history = [node["event"] for node in new_state.get("nodes", []) if node.get("selected")]
-        runtime_profile = {**new_state["profile"], "current_age": branch["age"]}
-        system, message = build_result_prompt(runtime_profile, branch["event"], history)
-        text = await asyncio.to_thread(call_llm, new_state.get("provider", "openai"), system, message, True)
-        parsed = parse_json_text(text)
-        selected_branch = {
-            **branch,
-            "selected": True,
-            "result": parsed.get("result_summary", parsed.get("result", "結果を生成できませんでした。")),
-            "happiness": parsed.get("happiness", "medium"),
-        }
-        others = [{**item, "selected": False} for item in new_state["branches"] if item["id"] != branch["id"]]
-        new_state["nodes"].append(selected_branch)
-        new_state["nodes"].extend(others)
+        path = _mark_selected_path(new_state["nodes"], branch.get("parent_id"))
+        history = [node["event"] for node in path]
+        selected_branch = await _resolve_node_result(
+            new_state,
+            {**branch, "selected": True},
+            history,
+        )
+        ordered_children = [
+            selected_branch if item["id"] == branch["id"] else {**item, "selected": False}
+            for item in new_state["branches"]
+        ]
+        new_state["nodes"].extend(ordered_children)
         new_state["branches"] = []
         new_state["current_node_id"] = selected_branch["id"]
+        _mark_selected_path(new_state["nodes"], selected_branch["id"])
+        _mark_visited_path(new_state["nodes"], selected_branch["id"])
         new_state["stage"] = "result"
         new_state["panel"] = panel
         new_state["error"] = ""
@@ -196,7 +245,9 @@ async def continue_simulation(state: dict[str, Any]) -> dict[str, Any]:
         current = next((node for node in new_state["nodes"] if node["id"] == new_state["current_node_id"]), None)
         if not current:
             raise ValueError("現在のノードが見つかりません。")
-        history = [node["event"] for node in new_state["nodes"] if node.get("selected")]
+        path = _mark_selected_path(new_state["nodes"], current["id"])
+        _mark_visited_path(new_state["nodes"], current["id"])
+        history = [node["event"] for node in path]
         new_state["branches"] = await _generate_branches(
             new_state,
             new_state["profile"],
@@ -220,7 +271,9 @@ async def generate_branches_for_node(state: dict[str, Any], node_id: str, *, pan
         target = next((node for node in new_state.get("nodes", []) if node["id"] == node_id), None)
         if not target:
             raise ValueError("指定されたノードが見つかりません。")
-        history = [node["event"] for node in new_state["nodes"] if node.get("selected")]
+        path = _mark_selected_path(new_state["nodes"], node_id)
+        _mark_visited_path(new_state["nodes"], node_id)
+        history = [node["event"] for node in path]
         new_state["branches"] = await _generate_branches(
             new_state,
             new_state["profile"],
@@ -232,6 +285,29 @@ async def generate_branches_for_node(state: dict[str, Any], node_id: str, *, pan
         )
         new_state["current_node_id"] = target["id"]
         new_state["stage"] = "branches"
+        new_state["panel"] = panel
+        new_state["error"] = ""
+    except Exception as exc:
+        new_state["error"] = str(exc)
+    return _refresh_derived(new_state)
+
+
+async def activate_existing_node(state: dict[str, Any], node_id: str, *, panel: str = "tree") -> dict[str, Any]:
+    new_state = copy.deepcopy(state)
+    try:
+        target = next((node for node in new_state.get("nodes", []) if node["id"] == node_id), None)
+        if not target:
+            raise ValueError("指定されたノードが見つかりません。")
+
+        path = _mark_selected_path(new_state["nodes"], node_id)
+        _mark_visited_path(new_state["nodes"], node_id)
+        if not target.get("result") and target.get("parent_id") is not None:
+            history = [node["event"] for node in path[:-1]]
+            await _resolve_node_result(new_state, target, history)
+
+        new_state["branches"] = []
+        new_state["current_node_id"] = node_id
+        new_state["stage"] = "result"
         new_state["panel"] = panel
         new_state["error"] = ""
     except Exception as exc:
@@ -269,10 +345,11 @@ async def generate_story(state: dict[str, Any]) -> dict[str, Any]:
 async def jump_to_node(state: dict[str, Any], node_id: str) -> dict[str, Any]:
     new_state = copy.deepcopy(state)
     try:
-        nodes = new_state.get("nodes", [])
-        target = next((node for node in nodes if node["id"] == node_id), None)
+        target = next((node for node in new_state.get("nodes", []) if node["id"] == node_id), None)
         if not target:
             raise ValueError("指定されたノードが見つかりません。")
+        _mark_selected_path(new_state["nodes"], node_id)
+        _mark_visited_path(new_state["nodes"], node_id)
         new_state["current_node_id"] = node_id
         new_state["stage"] = "result"
         new_state["panel"] = "main"
