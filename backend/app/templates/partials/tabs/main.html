@@ -1,0 +1,139 @@
+<div class="screen-body">
+  {% if stage == "setup" %}
+  <form class="stack" hx-post="/setup" hx-target="#app-shell" hx-swap="innerHTML">
+    <label>
+      <span>使用するAPI</span>
+      <span class="hint">`.env.local` に設定済みのキーだけ使えます。</span>
+      <div class="tag-grid">
+        {% for option in provider_options %}
+        <label class="tag-option">
+          <input
+            type="radio"
+            name="provider"
+            value="{{ option.value }}"
+            {{ 'checked' if state.provider == option.value else '' }}
+          >
+          <span>{{ option.label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </label>
+    <label>
+      <span>名前</span>
+      <input type="text" name="name" placeholder="田中 花子" required>
+    </label>
+    <label>
+      <span>生年</span>
+      <input type="number" name="birth_year" placeholder="2001" required>
+    </label>
+    <label>
+      <span>興味・価値観</span>
+      <span class="hint">複数選択できます。</span>
+      <div class="tag-grid">
+        {% for option in interest_options %}
+        <label class="tag-option">
+          <input type="checkbox" name="interests" value="{{ option }}">
+          <span>{{ option }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </label>
+    <label>
+      <span>性格</span>
+      <span class="hint">複数選択できます。</span>
+      <div class="tag-grid">
+        {% for option in personality_options %}
+        <label class="tag-option">
+          <input type="checkbox" name="personality" value="{{ option }}">
+          <span>{{ option }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </label>
+    <button class="button" type="submit">プロフィールを作成</button>
+  </form>
+  {% elif stage == "event" %}
+  <div class="screen-body">
+    <div class="summary-bar">
+      <strong>{{ profile.name }}</strong>
+      <span>{{ profile.current_age }}歳</span>
+      <span class="pill">API: {{ state.provider|upper }}</span>
+    </div>
+    <form class="stack" hx-post="/event" hx-target="#app-shell" hx-swap="innerHTML">
+      <label>
+        <span>最初の出来事</span>
+        <textarea
+          name="event"
+          rows="4"
+          placeholder="例: 大学で情報系を学ぶ、地方で就職する"
+          required
+        ></textarea>
+      </label>
+      <button class="button" type="submit">分岐を生成</button>
+    </form>
+  </div>
+  {% elif stage == "branches" %}
+  <div class="screen-body">
+    <div class="section-head">
+      <div>
+        <h2>分岐候補</h2>
+        <p>次に起こりうる選択肢です。</p>
+      </div>
+      <span class="pill">API: {{ state.provider|upper }}</span>
+    </div>
+    <div class="branch-list">
+      {% for branch in branches %}
+      <form class="branch" hx-post="/branch/select" hx-target="#app-shell" hx-swap="innerHTML">
+        <input type="hidden" name="branch_id" value="{{ branch.id }}">
+        <p class="branch-event">{{ branch.event }}</p>
+        <div class="meta-row">
+          <span>安定性: {{ branch.stability }}</span>
+          <span>挑戦度: {{ branch.challenge }}</span>
+        </div>
+        <button class="button" type="submit">この分岐を選ぶ</button>
+      </form>
+      {% endfor %}
+    </div>
+    <form class="stack inline-form" hx-post="/branch/custom" hx-target="#app-shell" hx-swap="innerHTML">
+      <label>
+        <span>分岐を自由入力で追加</span>
+        <input type="text" name="event" placeholder="例: 1年間休学して海外へ行く" required>
+      </label>
+      <button class="button button-secondary" type="submit">追加</button>
+    </form>
+  </div>
+  {% elif stage == "result" %}
+  <div class="screen-body">
+    <div class="section-head">
+      <div>
+        <h2>選択結果</h2>
+        <p>直近で選んだ分岐の結果です。</p>
+      </div>
+      <span class="pill">API: {{ state.provider|upper }}</span>
+    </div>
+    <div class="result-box">
+      <h3>選んだ出来事</h3>
+      <p>{{ current_node.event }}</p>
+    </div>
+    <div class="result-box">
+      <h3>結果</h3>
+      <p>{{ current_node.result }}</p>
+    </div>
+    <div class="result-box">
+      <h3>幸福度</h3>
+      <p>{{ current_node.happiness }}</p>
+    </div>
+    <div class="actions">
+      <button
+        class="button"
+        type="button"
+        hx-post="/continue"
+        hx-target="#app-shell"
+        hx-swap="innerHTML"
+      >
+        次の分岐へ進む
+      </button>
+    </div>
+  </div>
+  {% endif %}
+</div>

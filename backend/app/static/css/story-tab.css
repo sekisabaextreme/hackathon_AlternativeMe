@@ -1,0 +1,40 @@
+/* 役割: ストーリー要約タブ専用のスタイルを定義する。 */
+
+.history-list {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.panel-block {
+  display: grid;
+  gap: 12px;
+}
+
+.panel-story {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  background: rgba(122, 84, 62, 0.12);
+  border-color: rgba(212, 168, 109, 0.35);
+}
+
+.story-panel {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.history-list li {
+  display: grid;
+  gap: 6px;
+  border-left: 2px solid var(--accent);
+  padding-left: 12px;
+}
+
+.story-status {
+  color: var(--accent);
+  font-weight: 700;
+}

@@ -1,0 +1,29 @@
+<div class="screen-tabs">
+  <button
+    class="screen-tab {{ 'is-active' if panel == 'main' else '' }}"
+    type="button"
+    hx-post="/main"
+    hx-target="#app-shell"
+    hx-swap="innerHTML"
+  >
+    シミュレーション
+  </button>
+  <button
+    class="screen-tab {{ 'is-active' if panel == 'tree' else '' }}"
+    type="button"
+    hx-post="/tree"
+    hx-target="#app-shell"
+    hx-swap="innerHTML"
+  >
+    ツリー
+  </button>
+  <button
+    class="screen-tab {{ 'is-active' if panel == 'story' else '' }}"
+    type="button"
+    hx-post="/story"
+    hx-target="#app-shell"
+    hx-swap="innerHTML"
+  >
+    ストーリー要約
+  </button>
+</div>
