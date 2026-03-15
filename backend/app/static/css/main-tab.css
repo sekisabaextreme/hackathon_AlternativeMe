@@ -1,0 +1,73 @@
+/* 役割: シミュレーションタブ専用のスタイルを定義する。 */
+
+.tag-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tag-option {
+  display: inline-flex;
+  width: auto;
+  cursor: pointer;
+}
+
+.tag-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tag-option span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: rgba(34, 37, 48, 0.68);
+  color: var(--text-sub);
+  transition: 0.15s ease;
+}
+
+.tag-option input:checked + span {
+  background: rgba(214, 181, 117, 0.16);
+  border-color: rgba(214, 181, 117, 0.6);
+  color: var(--text);
+}
+
+.tag-option input[type="radio"] + span {
+  min-width: 96px;
+  text-align: center;
+}
+
+.branch-list {
+  display: grid;
+  gap: 12px;
+}
+
+.branch,
+.result-box {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--border);
+  background: rgba(34, 37, 48, 0.68);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.branch-event {
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.inline-form {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+@media (max-width: 900px) {
+  .inline-form {
+    grid-template-columns: 1fr;
+  }
+}

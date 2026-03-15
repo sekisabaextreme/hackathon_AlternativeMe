@@ -1,0 +1,79 @@
+/* 役割: ツリータブ専用のスタイルを定義する。 */
+
+.panel-tree {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  background: rgba(62, 84, 122, 0.12);
+  border-color: rgba(109, 146, 212, 0.35);
+}
+
+.tree-canvas-wrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(10, 12, 18, 0.36);
+  padding: 16px;
+}
+
+.tree-canvas {
+  display: block;
+}
+
+.tree-edge {
+  fill: none;
+  stroke: rgba(181, 185, 199, 0.35);
+  stroke-width: 2;
+}
+
+.tree-edge.is-selected {
+  stroke: rgba(214, 181, 117, 0.85);
+  stroke-width: 3;
+}
+
+.tree-node-box {
+  fill: rgba(32, 36, 48, 0.94);
+  stroke: rgba(109, 146, 212, 0.25);
+  stroke-width: 1.5;
+}
+
+.tree-node-box.is-selected {
+  fill: rgba(214, 181, 117, 0.14);
+  stroke: rgba(214, 181, 117, 0.7);
+}
+
+.tree-node-status {
+  fill: var(--text-sub);
+  font-size: 12px;
+}
+
+.tree-node-title {
+  fill: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.tree-node-meta {
+  fill: var(--text-sub);
+  font-size: 12px;
+}
+
+.tree-node-title-wrap {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.tree-node-group {
+  cursor: pointer;
+}
+
+.tree-node-group:hover .tree-node-box {
+  stroke: rgba(214, 181, 117, 0.9);
+  filter: drop-shadow(0 0 8px rgba(214, 181, 117, 0.4));
+}

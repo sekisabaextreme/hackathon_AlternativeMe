@@ -1,0 +1,18 @@
+<div class="layout">
+  <section class="card page-card">
+    {% include "partials/framework/header.html" %}
+    {% include "partials/framework/tabs.html" %}
+
+    {% if error %}
+    <div class="alert">{{ error }}</div>
+    {% endif %}
+
+    {% if panel == "main" %}
+      {% include "partials/tabs/main.html" %}
+    {% elif panel == "tree" %}
+      {% include "partials/tabs/tree.html" %}
+    {% elif panel == "story" %}
+      {% include "partials/tabs/story.html" %}
+    {% endif %}
+  </section>
+</div>
