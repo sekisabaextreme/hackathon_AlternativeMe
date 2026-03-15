@@ -1,0 +1,10 @@
+__pycache__/
+**/__pycache__/
+*.py[cod]
+
+.env.local
+
+backend/uvicorn.out.log
+backend/uvicorn.err.log
+
+.DS_Store
